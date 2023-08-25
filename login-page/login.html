@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;700&display=swap" rel="stylesheet">
+<title>Arfric</title>
+</head>
+<body>
+
+  <div class="loader">
+    <span class="spinner"></span>
+  </div>
+
+   <section class="section">
+
+      <h1>Welcome to Arfric Video Conferencing</h1>
+    <form class="form" method="post" action="login.php">
+      
+      <div class="inputContainer">
+      <input id="email" class="input" type="email" placeholder="Email" name="email" required>
+      <input id="password" class="input" type="password" placeholder="Password" name="password" required>
+     </div>
+
+     <div class="labels">
+      <label>
+         <input type="checkbox" checked>
+         Remember Me
+      </label>
+      <a href="/">Forgot Password</a>
+     </div>
+
+     <a href="home.html">
+     <button type="submit" id="button">Log In</button>
+    </a>
+
+     <div class="signUp">
+      <p>Don't have an account?</p>
+      <a href="../registration-page/register.html">Sign up</a>
+    </p>
+     </div>
+
+    </form>
+    
+    <script src="login.js"></script>
+    <!-- <script src="https://kit.fontawesome.com/5cec4b7ace.js" crossorigin="anonymous"></script> -->
+  </section>
+   
+</body>
+</html>
