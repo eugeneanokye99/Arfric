@@ -44,7 +44,6 @@
                     if (isset($_SESSION['logged_in_users'])) {
                         foreach ($_SESSION['logged_in_users'] as $userName) {
                             echo "<p class='preview'> $userName  <button id=\"toggleMic\">Toggle Mic</button><button id=\"toggleCamera\">Toggle Camera</button><span style=\"background-color: green; padding: 4px;\"></span><i>you</i></p>";
-                            $_SESSION['logged_in_users'] = array();
                         }
                     } else {
                         echo "<p>No users are currently logged in.</p>";
@@ -55,18 +54,19 @@
                         $db = new PDO("pgsql:host=localhost;dbname=postgres", "postgres", "123456789");
                         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-                        $query = "SELECT name FROM users";
+                        $query = "SELECT id, name FROM users";
                         $stmt = $db->query($query);
                         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         foreach ($users as $user) {
                             $userId = $user['id'];
-                            echo "<p class=\"preview\">" 
+                            echo "<p class=\"preview\" data-user-id=\"{$userId}\">" 
                             . $user['name'] . 
-                            "<span id=\"spanIcon_$userId\" class=\"fa-solid fa-phone\"></span> 
-                            <span id=\"spanText_$userId\" style=\"display: none; font-size:12px; color: white; \">Active call</span>
+                            "<button class=\"call-button\" data-user-id=\"{$userId}\" id=\"callButton-userId\">Call</button>
+                            <button class=\"hang-up-button\" data-user-id=\"{$userId}\" id=\"hangUpButton-userId\" style=\"display: none; \">Hang Up</button>
                             </p>";
                             }
+                            $_SESSION['logged_in_users'] = array();
                     } catch (PDOException $e) {
                         echo "Database connection error: " . $e->getMessage();
                     }

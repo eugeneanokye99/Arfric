@@ -15,6 +15,8 @@ let localStream;
 let peerConnection;
 let socket;
 
+
+
 // Connect to the WebSocket server
 function connectWebSocket() {
   socket = new WebSocket("ws://localhost:8080"); // Update with your WebSocket server URL
@@ -60,23 +62,32 @@ function createPeerConnection() {
 
 
 // Create an offer and send it to the remote peer
-function startCall() {
+function startCall(userId) {
    //changing the call button after call has been placed
-   document.getElementById("spanIcon").style.display = "none";
-   document.getElementById("spanText").style.display = "inline";
+   const callButton = document.querySelector(`.call-button[data-user-id="${userId}"]`);
+   callButton.style.display = "none";
+
+    const hangUpButton = document.querySelector(`.hang-up-button[data-user-id="${userId}"]`);
+   hangUpButton.style.display = "block";
+
+  
+
    document.getElementById("remoteVideo").style.display = "block";
 
   connectWebSocket();
   createPeerConnection();
 
-  peerConnection
-    .createOffer()
-    .then((offer) => peerConnection.setLocalDescription(offer))
-    .then(() => {
-      // Send offer to the remote peer via WebSocket
-      socket.send(JSON.stringify({ type: "offer", offer: peerConnection.localDescription }));
-    })
-    .catch((error) => console.error("Error creating offer:", error));
+  socket.addEventListener("open", () => {
+    peerConnection
+      .createOffer()
+      .then((offer) => peerConnection.setLocalDescription(offer))
+      .then(() => {
+        // Send offer to the remote peer via WebSocket
+        socket.send(JSON.stringify({ type: "offer", offer: peerConnection.localDescription }));
+      })
+      .catch((error) => console.error("Error creating offer:", error));
+  });
+
 }
 
 // Handle incoming offer from the remote peer
@@ -118,11 +129,48 @@ function initApp() {
 
       connectWebSocket();
 
-      joinButton.addEventListener("click", startCall);
+      
+
+      
     })
     .catch((error) => {
       console.error("Error accessing media devices:", error);
     });
+
+    
+// Hang up the call and clean up resources
+function hangUp(userId) {
+  if (peerConnection) {
+    peerConnection.close();
+    peerConnection = null;
+  }
+
+  // Close the local stream
+  if (localStream) {
+    localStream.getTracks().forEach(track => {
+      track.stop();
+    });
+    localStream = null;
+  }
+
+  // Hide remote video
+  const remoteVideo = document.getElementById("remoteVideo");
+  remoteVideo.style.display = "none";
+
+
+ //changing the hang up button after call has been ended
+ const callButton = document.querySelector(`.call-button[data-user-id="${userId}"]`);
+ callButton.style.display = "block";
+
+  const hangUpButton = document.querySelector(`.hang-up-button[data-user-id="${userId}"]`);
+ hangUpButton.style.display = "none";
+
+
+  // Send hang-up signal to the remote peer
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: "hangUp" }));
+  }
+}
 
   // Toggle microphone
   toggleMicButton.addEventListener("click", () => {
@@ -146,4 +194,21 @@ function initApp() {
 }
 
 // Initialize the app when the DOM is loaded
-document.addEventListener("DOMContentLoaded", initApp);
+document.addEventListener("DOMContentLoaded", () => {
+  initApp();
+
+ // Call Button click event
+ const callButtons = document.querySelectorAll(".call-button");
+ callButtons.forEach((button) => {
+   button.addEventListener("click", () => {
+     const userId = button.getAttribute("data-user-id");
+     startCall(userId);
+   });
+ });
+
+ // Hang up button click event
+ const hangUpButtons = document.querySelectorAll(".hang-up-button");
+ hangUpButtons.forEach((button) => {
+   button.addEventListener("click", hangUp);
+ });
+});
