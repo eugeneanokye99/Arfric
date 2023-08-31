@@ -28,6 +28,23 @@ function connectWebSocket() {
   socket.addEventListener("message", async (event) => {
     const data = JSON.parse(event.data);
 
+    if (data.type === "call") {
+      const { callerId, calleeId } = parsedData;
+      // Find the callee's socket based on their ID
+    const calleeSocket = findCalleeSocketById(calleeId);
+    
+    if (calleeSocket) {
+      // Send an alert to the callee
+      calleeSocket.send(JSON.stringify({ type: "callAlert" }));
+    }
+
+    }
+
+    if (data.type === "callAlert") {
+      // Show an alert to the callee
+      alert("You are being called!");
+  }
+
     if (data.type === "offer") {
       await handleOffer(data.offer);
     } else if (data.type === "answer") {
@@ -138,6 +155,28 @@ function initApp() {
     });
 
     
+
+  // Toggle microphone
+  toggleMicButton.addEventListener("click", () => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+        toggleMicButton.innerText = track.enabled ? "Mute" : "Unmute";
+      });
+    }
+  });
+
+  // Toggle camera
+  toggleCameraButton.addEventListener("click", () => {
+    if (localStream) {
+      localStream.getVideoTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+        toggleCameraButton.innerText = track.enabled ? "Camera Off" : "Camera On";
+      });
+    }
+  });
+}
+
 // Hang up the call and clean up resources
 function hangUp(userId) {
   if (peerConnection) {
@@ -172,27 +211,6 @@ function hangUp(userId) {
   }
 }
 
-  // Toggle microphone
-  toggleMicButton.addEventListener("click", () => {
-    if (localStream) {
-      localStream.getAudioTracks().forEach((track) => {
-        track.enabled = !track.enabled;
-        toggleMicButton.innerText = track.enabled ? "Mute" : "Unmute";
-      });
-    }
-  });
-
-  // Toggle camera
-  toggleCameraButton.addEventListener("click", () => {
-    if (localStream) {
-      localStream.getVideoTracks().forEach((track) => {
-        track.enabled = !track.enabled;
-        toggleCameraButton.innerText = track.enabled ? "Camera Off" : "Camera On";
-      });
-    }
-  });
-}
-
 // Initialize the app when the DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
@@ -202,13 +220,25 @@ document.addEventListener("DOMContentLoaded", () => {
  callButtons.forEach((button) => {
    button.addEventListener("click", () => {
      const userId = button.getAttribute("data-user-id");
+
+     // Notify the callee through the WebSocket
+    socket.send(JSON.stringify({ type: "call", callerId: 10, calleeId: userId }));
+
+     alert(`Calling user with ID ${userId}`);
+
+      // Show the video screen when call button is pressed
+      document.getElementById("video-screen").style.display = "block";
+      
      startCall(userId);
    });
  });
 
  // Hang up button click event
  const hangUpButtons = document.querySelectorAll(".hang-up-button");
- hangUpButtons.forEach((button) => {
-   button.addEventListener("click", hangUp);
+  hangUpButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const userId = button.getAttribute("data-user-id");
+      hangUp(userId);
+  });
  });
 });
